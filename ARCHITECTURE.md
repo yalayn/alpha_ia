@@ -1,51 +1,51 @@
-# Project Alpha: Software Architecture Constitution
+# Proyecto Alpha: Constitución de la Arquitectura de Software
 
-## Overview
-This project follows **Clean Architecture** (also known as Hexagonal Architecture or Ports & Adapters). The main goal is to protect the business logic (Domain) from changes in external factors like frameworks, databases, or UI.
+## Resumen
+Este proyecto sigue la **Arquitectura Limpia** (también conocida como Arquitectura Hexagonal o Puertos y Adaptadores). El objetivo principal es proteger la lógica de negocio (Dominio) de cambios en factores externos como frameworks, bases de datos o la interfaz de usuario.
 
-## Architecture Layers
+## Capas de la Arquitectura
 
 ```mermaid
 graph TD
-    Infra[Infrastructure Layer] --> App[Application Layer]
-    App --> Domain[Domain Layer]
+    Infra[Capa de Infraestructura] --> App[Capa de Aplicación]
+    App --> Domain[Capa de Dominio]
     Infra --> Domain
 ```
 
-### 1. Domain Layer (The Heart)
-- **Path**: `src/domain`
-- **Goal**: Represent the business logic and rules.
-- **Constraints**: 0 dependencies. No NestJS, no Mongoose, no external libraries.
-- **Contents**:
-  - `entities/`: Pure business models.
-  - `ports/`: Repository and Service interfaces.
-  - `exceptions/`: Domain-specific error classes.
-- **Critical rule**: If a file in src/domain imports anything from @nestjs/common, the code is invalid.
+### 1. Capa de Dominio (El Corazón)
+- **Ruta**: `src/domain`
+- **Objetivo**: Representar la lógica y las reglas de negocio.
+- **Restricciones**: 0 dependencias. Sin NestJS, sin Mongoose, sin librerías externas.
+- **Contenido**:
+  - `entities/`: Modelos de negocio puros.
+  - `ports/`: Interfaces de Repositorios y Servicios.
+  - `exceptions/`: Clases de error específicas del dominio.
+- **Regla crítica**: Si un archivo en `src/domain` importa algo de `@nestjs/common`, el código es inválido.
 
-### 2. Application Layer (Cases of Use)
-- **Path**: `src/application`
-- **Goal**: Orchestrate the business logic to achieve specific tasks.
-- **Constraints**: Only depends on Domain.
-- **Contents**:
-  - `use-cases/`: Single-purpose classes (e.g., `CreateUserUseCase`).
-  - `services/`: Logic that spans multiple use cases.
-  - `dtos/`: Input and output data structures.
-- **Critical rule**: 
-  - If a use case in src/application accesses the database directly without going through a port (interface), the code is invalid.
-  - Every new use case must be accompanied by its .spec.ts unit test file.
+### 2. Capa de Aplicación (Casos de Uso)
+- **Ruta**: `src/application`
+- **Objetivo**: Orquestar la lógica de negocio para lograr tareas específicas.
+- **Restricciones**: Solo depende del Dominio.
+- **Contenido**:
+  - `use-cases/`: Clases de propósito único (ej. `CreateUserUseCase`).
+  - `services/`: Lógica que abarca múltiples casos de uso.
+  - `dtos/`: Estructuras de datos de entrada y salida.
+- **Regla crítica**: 
+  - Si un caso de uso en `src/application` accede a la base de datos directamente sin pasar por un puerto (interfaz), el código es inválido.
+  - Cada nuevo caso de uso debe estar acompañado por su archivo de prueba unitaria `.spec.ts`.
 
-### 3. Infrastructure Layer (Technical Details)
-- **Path**: `src/infrastructure`
-- **Goal**: Implement technical details and provide entry points.
-- **Constraints**: Can depend on any layer.
-- **Contents**:
-  - `controllers/`: NestJS Controllers.
-  - `persistence/`: Database implementations (Repositories).
-  - `adapters/`: External service implementations (e.g., Mailer).
-  - `config/`: Environment configuration.
+### 3. Capa de Infraestructura (Detalles Técnicos)
+- **Ruta**: `src/infrastructure`
+- **Objetivo**: Implementar detalles técnicos y proporcionar puntos de entrada.
+- **Restricciones**: Puede depender de cualquier capa.
+- **Contenido**:
+  - `controllers/`: Controladores de NestJS.
+  - `persistence/`: Implementaciones de base de datos (Repositorios).
+  - `adapters/`: Implementaciones de servicios externos (ej. Mailer).
+  - `config/`: Configuración del entorno.
 
-## Dependency Injection
-We use NestJS DI system. Implementations from the **Infrastructure** layer are injected into the **Application** layer via the **Ports** defined in the **Domain** layer.
+## Inyección de Dependencias
+Utilizamos el sistema DI de NestJS. Las implementaciones de la capa de **Infraestructura** se inyectan en la capa de **Aplicación** a través de los **Puertos** definidos en la capa de **Dominio**.
 
-## Source of Truth
-The API contract is defined in `docs/openapi.yaml`. Any change to the API must start there.
+## Fuente de Verdad
+El contrato de la API se define en `docs/openapi.yaml`. Cualquier cambio en la API debe comenzar allí.
