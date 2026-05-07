@@ -291,16 +291,20 @@ export class {Entity}Controller {
 ### 6.2 Repositorios (Implementación de Puertos)
 
 ```typescript
-// {entity}.repository.ts
+// {technology}-{entity}.repository.ts
 @Injectable()
-export class {Entity}Repository implements I{Entity}Repository {
+export class {Technology}{Entity}Repository implements I{Entity}Repository {
   constructor(
     @InjectModel({Entity}Document.name)
     private model: Model<{Entity}Document>,
   ) {}
 
   async save(entity: {Entity}): Promise<{Entity}> {
-    const doc = await this.model.create({Entity}Mapper.toPersistence(entity));
+    const doc = await this.model.findOneAndUpdate(
+      { id: entity.id },
+      { $set: {Entity}Mapper.toPersistence(entity) },
+      { upsert: true, new: true }
+    ).exec();
     return {Entity}Mapper.toDomain(doc);
   }
 
@@ -312,11 +316,34 @@ export class {Entity}Repository implements I{Entity}Repository {
 ```
 
 **Reglas de repositorios:**
+- Nombrar las implementaciones con el prefijo de la tecnología usada (ej: `MongoosePlanRepository`)
 - Siempre usar un `Mapper` para convertir entre documento Mongoose y entidad de dominio
 - El repositorio nunca expone el documento de Mongoose fuera de esta clase
 - Implementar **todas** las firmas definidas en el puerto correspondiente
 
-### 6.3 Módulos NestJS y Registro de Dependencias
+### 6.3 Mappers
+
+Los mappers son clases estáticas encargadas de la transformación bidireccional entre el Dominio y la Infraestructura.
+
+```typescript
+// {entity}.mapper.ts
+export class {Entity}Mapper {
+  static toDomain(doc: {Entity}Document): {Entity} {
+    return new {Entity}(/* mapeo de campos */);
+  }
+
+  static toPersistence(entity: {Entity}): Partial<{Entity}Document> {
+    return { /* mapeo de campos */ };
+  }
+}
+```
+
+**Reglas de mappers:**
+- Solo viven en la capa de **Infraestructura**.
+- Deben ser clases puras con métodos estáticos.
+- Manejan las conversiones de tipos (ej: de `string` en DB a un tipo unión específico en el Dominio).
+
+### 6.4 Módulos NestJS y Registro de Dependencias
 
 Cada módulo registra los `providers` usando el `Symbol` del puerto como token:
 
@@ -334,11 +361,49 @@ Cada módulo registra los `providers` usando el `Symbol` del puerto como token:
       useClass: {Entity}Repository,       // ← Implementación (infraestructura)
     },
   ],
+  exports: [{ENTITY}_REPOSITORY],        // ← Permitir que otros módulos usen este repositorio
 })
 export class {Entity}Module {}
 ```
 
----
+### 6.5 Presenters
+
+Los Presenters transforman las Entidades de Dominio en DTOs de respuesta HTTP, asegurando que el contrato de salida sea consistente con el OpenAPI.
+
+```typescript
+// {entity}.presenter.ts
+export class {Entity}Presenter {
+  static toResponse(entity: {Entity}): any {
+    return {
+      id: entity.id,
+      // formateo de fechas, ocultamiento de campos sensibles, etc.
+    };
+  }
+}
+```
+
+**Reglas de presenters:**
+- Solo viven en la capa de **Infraestructura**.
+- Transforman entidades de dominio a objetos JSON simples.
+- Encargados del formateo final (ej: Date a string ISO).
+
+### 6.6 Manejo de Errores (Exception Filters)
+
+Se utiliza el patrón **Global Exception Filter** para desacoplar las excepciones de negocio del protocolo de transporte (HTTP).
+
+**Práctica sugerida:**
+1.  **Excepciones de Dominio**: Deben ser semánticas y no contener códigos HTTP.
+2.  **Traducción en Infraestructura**: El `DomainExceptionFilter` es el único lugar donde se decide qué código HTTP (404, 400, etc.) corresponde a cada error de negocio.
+3.  **Contrato Único**: Todas las respuestas de error deben seguir el esquema `ErrorResponse` definido en el OpenAPI.
+
+```typescript
+// Ejemplo de mapeo en el filtro
+if (exception instanceof PlanNotFoundException) {
+  status = HttpStatus.NOT_FOUND;
+  code = 'plan_not_found';
+}
+```
+
 
 ## 7. Convenciones de Naming
 
