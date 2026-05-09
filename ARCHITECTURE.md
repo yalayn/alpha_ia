@@ -404,6 +404,25 @@ if (exception instanceof PlanNotFoundException) {
 }
 ```
 
+### 6.7 Documentación de API (Swagger)
+
+Es obligatorio que todos los puntos de entrada HTTP estén documentados utilizando los decoradores de `@nestjs/swagger`. Esto garantiza que la interfaz de Swagger UI (`/api-docs`) sea siempre el contrato vivo del sistema.
+
+**Estándares de documentación:**
+- **Controladores**: Deben usar `@ApiTags` para agrupar endpoints y `@ApiOperation` para describir la intención.
+- **DTOs (HTTP)**: Deben usar `@ApiProperty` en todos sus campos, incluyendo `description` y `example`.
+- **Respuestas**: Se deben documentar los códigos de estado comunes con `@ApiResponse` (ej: 201, 400, 404, 409).
+
+```typescript
+// Ejemplo de DTO documentado
+export class CreatePlanHttpDto {
+  @ApiProperty({ description: 'Nombre del plan', example: 'Premium' })
+  @IsString()
+  name: string;
+}
+```
+
+---
 
 ## 7. Convenciones de Naming
 
