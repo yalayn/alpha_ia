@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe, Logger } from '@nestjs/common';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { DomainExceptionFilter } from './infrastructure/filters/domain-exception.filter';
 
 async function bootstrap() {
@@ -16,6 +17,15 @@ async function bootstrap() {
 
   // Filtro de excepciones global
   app.useGlobalFilters(new DomainExceptionFilter());
+
+  // Configuración de Swagger (Mover aquí al final)
+  const config = new DocumentBuilder()
+    .setTitle('Alpha IA API')
+    .setDescription('Servicio de gestión de planes, suscripciones y control de acceso para Alpha IA')
+    .setVersion('1.0')
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api-docs', app, document);
 
   const port = process.env.PORT || 3000;
   await app.listen(port);

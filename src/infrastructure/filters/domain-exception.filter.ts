@@ -23,8 +23,17 @@ export class DomainExceptionFilter implements ExceptionFilter {
     let code = 'internal_error';
     let message = exception.message;
 
-    // Mapeo de excepciones de dominio
-    if (exception instanceof PlanNotFoundException || exception instanceof SubscriptionNotFoundException) {
+    // 1. Manejo ultra-robusto para cualquier excepción de NestJS/HTTP
+    const exceptionStatus = typeof exception.getStatus === 'function' ? exception.getStatus() : exception.status;
+    
+    if (exceptionStatus) {
+      status = exceptionStatus;
+      const responseBody = exception.response;
+      code = responseBody?.error || (status === 404 ? 'not_found' : 'http_error');
+      message = responseBody?.message || exception.message;
+    }
+    // 2. Mapeo de excepciones de dominio (si no tienen status previo)
+    else if (exception instanceof PlanNotFoundException || exception instanceof SubscriptionNotFoundException) {
       status = HttpStatus.NOT_FOUND;
       code = exception instanceof PlanNotFoundException ? 'plan_not_found' : 'subscription_not_found';
     } 
@@ -47,14 +56,6 @@ export class DomainExceptionFilter implements ExceptionFilter {
     else if (exception instanceof FeatureNotIncludedException) {
       status = HttpStatus.FORBIDDEN;
       code = 'feature_not_in_plan';
-    }
-    // Manejo de errores de validación de NestJS (class-validator)
-    else if (exception.status === HttpStatus.BAD_REQUEST && exception.response?.message) {
-      status = HttpStatus.BAD_REQUEST;
-      code = 'validation_error';
-      message = Array.isArray(exception.response.message) 
-        ? exception.response.message.join(', ') 
-        : exception.response.message;
     }
 
     response.status(status).json({
