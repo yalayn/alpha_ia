@@ -7,9 +7,9 @@ import { PlanPresenter } from '../presenters/plan.presenter';
 @ApiTags('Plans')
 @Controller('plans')
 export class PlanController {
-  constructor(private readonly createPlanUseCase: CreatePlanUseCase) {}
+  constructor(private readonly createPlanUseCase: CreatePlanUseCase) { }
 
-  @Post()
+  @Post('create')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Crear un nuevo plan de suscripción' })
   @ApiResponse({ status: 201, description: 'Plan creado exitosamente.' })

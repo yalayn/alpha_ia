@@ -8,14 +8,14 @@ import { SubscriptionPresenter } from '../presenters/subscription.presenter';
 import { AccessResultPresenter } from '../presenters/access-result.presenter';
 
 @ApiTags('Subscriptions', 'Access')
-@Controller()
+@Controller('subscriptions')
 export class SubscriptionController {
   constructor(
     private readonly subscribeCustomerUseCase: SubscribeCustomerUseCase,
     private readonly validateAccessUseCase: ValidateAccessUseCase,
   ) { }
 
-  @Post('subscriptions')
+  @Post('subscribe')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Suscribir un cliente a un plan' })
   @ApiResponse({ status: 201, description: 'Suscripción creada exitosamente.' })
