@@ -28,6 +28,8 @@ tags:
     description: Gestión de suscripciones de clientes
   - name: Orchestration
     description: Validación de acceso y orquestación de permisos
+  - name: Auth
+    description: Autenticación y gestión de usuarios
 
 # =============================================================
 # PATHS
@@ -58,6 +60,53 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+
+  # ── Auth ────────────────────────────────────────────────────
+  /auth/register:
+    post:
+      summary: Registrar un nuevo usuario
+      description: Crea una nueva cuenta de usuario en el sistema.
+      operationId: registerUser
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Usuario registrado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /auth/login:
+    post:
+      summary: Iniciar sesión
+      description: Autentica a un usuario y devuelve un token JWT.
+      operationId: loginUser
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login exitoso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
               example:
                 statusCode: 503
                 error: service_unavailable
@@ -442,6 +491,70 @@ components:
 
   # ── Schemas ──────────────────────────────────────────────────
   schemas:
+
+    # ── Auth ─────────────────────────────────────────────────
+    RegisterRequest:
+      type: object
+      required: [email, password, name]
+      properties:
+        email:
+          type: string
+          format: email
+          example: john.doe@example.com
+        password:
+          type: string
+          format: password
+          minLength: 6
+          example: "StrongP@ssw0rd!"
+        name:
+          type: string
+          example: John Doe
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: john.doe@example.com
+        password:
+          type: string
+          format: password
+          example: "StrongP@ssw0rd!"
+
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: Token JWT para autenticación Bearer
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        user:
+          $ref: '#/components/schemas/User'
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        email:
+          type: string
+          format: email
+          example: john.doe@example.com
+        name:
+          type: string
+          example: John Doe
+        role:
+          type: string
+          enum: [admin, customer]
+          example: customer
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-01-01T12:00:00.000Z"
 
     # ── Request bodies ───────────────────────────────────────
     CreatePlanRequest:

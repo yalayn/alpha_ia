@@ -12,6 +12,7 @@ import { SubscriptionAlreadyActiveException } from '@domain/exceptions/subscript
 import { SubscriptionAlreadyCanceledException } from '@domain/exceptions/subscription-already-canceled.exception';
 import { PaymentFailedException } from '@domain/exceptions/payment-failed.exception';
 import { FeatureNotIncludedException } from '@domain/exceptions/feature-not-included.exception';
+import { UserAlreadyExistsException } from '@domain/exceptions/user-already-exists.exception';
 
 @Catch()
 export class DomainExceptionFilter implements ExceptionFilter {
@@ -37,9 +38,9 @@ export class DomainExceptionFilter implements ExceptionFilter {
       status = HttpStatus.NOT_FOUND;
       code = exception instanceof PlanNotFoundException ? 'plan_not_found' : 'subscription_not_found';
     } 
-    else if (exception instanceof PlanAlreadyExistsException) {
+    else if (exception instanceof PlanAlreadyExistsException || exception instanceof UserAlreadyExistsException) {
       status = HttpStatus.CONFLICT;
-      code = 'plan_already_exists';
+      code = exception instanceof PlanAlreadyExistsException ? 'plan_already_exists' : 'user_already_exists';
     }
     else if (exception instanceof SubscriptionAlreadyActiveException) {
       status = HttpStatus.BAD_REQUEST;
