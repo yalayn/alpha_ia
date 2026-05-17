@@ -13,6 +13,7 @@ import { SubscriptionAlreadyCanceledException } from '@domain/exceptions/subscri
 import { PaymentFailedException } from '@domain/exceptions/payment-failed.exception';
 import { FeatureNotIncludedException } from '@domain/exceptions/feature-not-included.exception';
 import { UserAlreadyExistsException } from '@domain/exceptions/user-already-exists.exception';
+import { InvalidCredentialsException } from '@domain/exceptions/invalid-credentials.exception';
 
 @Catch()
 export class DomainExceptionFilter implements ExceptionFilter {
@@ -57,6 +58,10 @@ export class DomainExceptionFilter implements ExceptionFilter {
     else if (exception instanceof FeatureNotIncludedException) {
       status = HttpStatus.FORBIDDEN;
       code = 'feature_not_in_plan';
+    }
+    else if (exception instanceof InvalidCredentialsException) {
+      status = HttpStatus.UNAUTHORIZED;
+      code = 'invalid_credentials';
     }
 
     response.status(status).json({
